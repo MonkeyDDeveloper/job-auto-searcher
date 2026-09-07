@@ -37,6 +37,9 @@ CANDIDATO 2: MAYRA (Perfil 2 - Entrada a Industria O&G - Flexible)
 4. Analiza el texto completo de las publicaciones para extraer emails reales, incluidos dominios corporativos y cuentas de reclutadores locales.
 5. No inventes vacantes, emails, empresas, URLs ni fechas. Si no hay email, usa "No disponible" y en el correo usa "No aplica".
 6. Cuando exista un contacto, "email_recomendado" debe contener dos versiones completas del mismo correo: primero español y después inglés, con los encabezados "Versión en español" y "English version". Ambas versiones deben mencionar la empresa real y no contener placeholders.
+7. La propiedad "url" debe ser el enlace directo a la página individual de esa vacante y al lugar específico para postular. Nunca uses páginas generales, búsquedas, categorías, listados, páginas de empresa, portales raíz ni URLs que solo muestran resultados de búsqueda. Por ejemplo, no uses rutas como "remote-jobs-in/latin-america/backend-development".
+8. Usa fetch_url para abrir y verificar cada URL antes de incluirla. Excluye vacantes cerradas, expiradas, eliminadas, pausadas, ya no disponibles, con solicitud terminada, con error 404/410, o páginas que solo redirijan a iniciar sesión y no permitan verificar la vacante. En LinkedIn, una ruta que parezca específica no es suficiente: confirma que la publicación sigue activa y permite postular.
+9. Si no puedes confirmar simultáneamente que la URL es específica y que la vacante sigue aceptando solicitudes, excluye la oportunidad. Es preferible devolver menos resultados que enviar un enlace inválido o una vacante cerrada.
 
 --- ALGORITMO ---
 1. Busca en motores de búsqueda usando las cadenas booleanas y plataformas indicadas.

@@ -1,11 +1,34 @@
 import httpx
 from perplexity import Perplexity
+from urllib.parse import urlparse
 
 from .schemas import JobOffer, SearchResults
 
 
 class PerplexityError(RuntimeError):
     pass
+
+
+def _is_specific_job_url(url: str) -> bool:
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return False
+    path = parsed.path.lower().rstrip("/")
+    if not path or path in {"/jobs", "/careers", "/search"}:
+        return False
+    blocked_fragments = (
+        "remote-jobs-in",
+        "/search/",
+        "/search?",
+        "/category/",
+        "/categories/",
+        "/job-search",
+    )
+    if any(fragment in f"{path}?{parsed.query}" for fragment in blocked_fragments):
+        return False
+    if "linkedin.com" in parsed.netloc.lower() and "/jobs/view/" not in path:
+        return False
+    return True
 
 
 def _response_schema() -> dict:
@@ -42,8 +65,11 @@ def search_jobs(
             input=prompt,
             instructions=(
                 "Search the web extensively before answering. Use web_search and "
-                "fetch_url for current job listings. Never invent a job, URL, "
-                "email, company, or date. Return only the requested JSON."
+                "fetch_url for current job listings. Open every candidate URL and "
+                "verify it is a live, specific job detail/application page. Reject "
+                "search pages, category pages, generic portal pages, closed or "
+                "expired jobs, 404/410 pages, and login-only pages. Never invent a "
+                "job, URL, email, company, or date. Return only the requested JSON."
             ),
             tools=[
                 {"type": "web_search", "search_context_size": "high", "max_results": 20},
@@ -67,7 +93,10 @@ def search_jobs(
     except (ValueError, TypeError) as error:
         raise PerplexityError("Perplexity no devolvió el JSON esperado.") from error
     return {
-        "javier_automatizacion": parsed.javier_automatizacion,
-        "javier_software": parsed.javier_software,
-        "mayra_petroleras": parsed.mayra_petroleras,
+        key: [offer for offer in offers if _is_specific_job_url(offer.url)]
+        for key, offers in {
+            "javier_automatizacion": parsed.javier_automatizacion,
+            "javier_software": parsed.javier_software,
+            "mayra_petroleras": parsed.mayra_petroleras,
+        }.items()
     }

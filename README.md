@@ -90,6 +90,8 @@ Si Perplexity o una integración de email falla, el servicio intenta enviar una 
 
 El endpoint usa Perplexity Agent API con las herramientas `web_search` y `fetch_url`, por lo que la IA puede buscar y verificar páginas antes de generar el JSON. La respuesta sigue validándose para evitar inventar o guardar datos con estructura incorrecta.
 
+Las URLs deben apuntar a la página individual de la vacante y al lugar específico para postular. Se excluyen rutas generales, páginas de búsqueda o categorías, vacantes cerradas/expiradas/eliminadas, errores 404/410 y páginas que solo requieran iniciar sesión sin permitir verificar la oportunidad.
+
 ## Modelos y precios
 
 Los precios son USD por 1 millón de tokens y pueden cambiar.
