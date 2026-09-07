@@ -10,6 +10,8 @@ class Settings:
     fallback_model: str
     perplexity_timeout_seconds: int
     perplexity_retries: int
+    perplexity_max_steps: int
+    perplexity_max_output_tokens: int
     email_recipients: tuple[str, ...]
     mayra_email: str
     smtp_host: str | None
@@ -43,6 +45,10 @@ def load_settings() -> Settings:
             os.getenv("PERPLEXITY_TIMEOUT_SECONDS", "300")
         ),
         perplexity_retries=int(os.getenv("PERPLEXITY_RETRIES", "2")),
+        perplexity_max_steps=int(os.getenv("PERPLEXITY_MAX_STEPS", "10")),
+        perplexity_max_output_tokens=int(
+            os.getenv("PERPLEXITY_MAX_OUTPUT_TOKENS", "16000")
+        ),
         email_recipients=recipients,
         mayra_email=os.getenv("MAYRA_EMAIL", "masachemayra@gmail.com"),
         smtp_host=os.getenv("SMTP_HOST"),

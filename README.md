@@ -61,6 +61,8 @@ Todos los campos son opcionales:
 - `PERPLEXITY_FALLBACK_MODEL`: modelo alternativo si falla el principal; por defecto `perplexity/sonar`.
 - `PERPLEXITY_TIMEOUT_SECONDS`: tiempo máximo por intento; por defecto `300` segundos.
 - `PERPLEXITY_RETRIES`: reintentos del SDK ante errores transitorios; por defecto `2`.
+- `PERPLEXITY_MAX_STEPS`: máximo de pasos de investigación del Agent API; por defecto `10`.
+- `PERPLEXITY_MAX_OUTPUT_TOKENS`: límite de salida; por defecto `16000`.
 - `shouldNotify`: `true` por defecto. Envía las tres listas completas a todos los destinatarios de `EMAILS_TO_NOTIFY` y a `MAYRA_EMAIL`, además de los correos directos de Javier.
 
 La respuesta se normaliza en tres listas: `javier_automatizacion`, `javier_software` y `mayra_petroleras`. Cada lista puede contener la cantidad de resultados que Perplexity logre validar, incluso cero; no se exige llegar a cinco.
@@ -85,6 +87,8 @@ Cuando Perplexity encuentra un `email_contacto` y redacta un `email_recomendado`
 Si SMTP no está configurado, el endpoint devuelve los resultados y añade el problema a `warnings`.
 
 Si Perplexity o una integración de email falla, el servicio intenta enviar una alerta con el detalle del error a `EMAILS_TO_NOTIFY` y `MAYRA_EMAIL`. Si el propio SMTP está caído, la alerta no podrá enviarse y el error queda en los logs/respuesta cuando sea posible.
+
+El servicio registra cada etapa con `request_id`: lectura del historial, intento de modelo, búsqueda, deduplicación, registro en Sheets, notificaciones y duración total. Si la plataforma tiene un timeout HTTP menor que el tiempo configurado, el proxy puede cortar la conexión aunque el proceso continúe; en ese caso revisa los logs usando el `request_id`.
 
 ## Control de postulaciones
 

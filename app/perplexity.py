@@ -1,4 +1,5 @@
 import httpx
+import logging
 from perplexity import Perplexity
 from urllib.parse import urlparse
 
@@ -7,6 +8,9 @@ from .schemas import JobOffer, SearchResults
 
 class PerplexityError(RuntimeError):
     pass
+
+
+logger = logging.getLogger(__name__)
 
 
 def _is_specific_job_url(url: str) -> bool:
@@ -48,6 +52,8 @@ def search_jobs(
     api_key: str,
     timeout_seconds: int = 300,
     retries: int = 2,
+    max_steps: int = 10,
+    max_output_tokens: int = 16000,
 ) -> dict[str, list[JobOffer]]:
     if not api_key:
         raise PerplexityError("Falta PERPLEXITY_API_KEY.")
@@ -57,6 +63,13 @@ def search_jobs(
         read=float(timeout_seconds),
         write=30.0,
         pool=30.0,
+    )
+    logger.info(
+        "perplexity_search_started model=%s timeout_seconds=%s retries=%s max_steps=%s",
+        model,
+        timeout_seconds,
+        retries,
+        max_steps,
     )
     client = Perplexity(api_key=api_key, max_retries=max(0, retries), timeout=timeout)
     try:
@@ -76,23 +89,26 @@ def search_jobs(
                 {"type": "fetch_url", "max_urls": 10},
             ],
             response_format=_response_schema(),
-            max_output_tokens=16000,
-            max_steps=10,
+            max_output_tokens=max_output_tokens,
+            max_steps=max_steps,
         )
     except Exception as error:
+        logger.exception("perplexity_search_failed model=%s", model)
         raise PerplexityError(f"Perplexity no pudo completar la búsqueda: {error}") from error
     finally:
         client.close()
 
     if response.status != "completed":
+        logger.error("perplexity_search_incomplete status=%s model=%s", response.status, model)
         raise PerplexityError(
             f"Perplexity terminó con estado {response.status}: {response.error}"
         )
     try:
         parsed = SearchResults.model_validate_json(response.output_text)
     except (ValueError, TypeError) as error:
+        logger.exception("perplexity_invalid_json model=%s", model)
         raise PerplexityError("Perplexity no devolvió el JSON esperado.") from error
-    return {
+    results = {
         key: [offer for offer in offers if _is_specific_job_url(offer.url)]
         for key, offers in {
             "javier_automatizacion": parsed.javier_automatizacion,
@@ -100,3 +116,9 @@ def search_jobs(
             "mayra_petroleras": parsed.mayra_petroleras,
         }.items()
     }
+    logger.info(
+        "perplexity_search_completed model=%s result_counts=%s",
+        model,
+        {key: len(offers) for key, offers in results.items()},
+    )
+    return results

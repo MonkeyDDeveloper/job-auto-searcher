@@ -1,4 +1,5 @@
 import json
+import logging
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -11,6 +12,9 @@ class SheetsError(RuntimeError):
     pass
 
 
+logger = logging.getLogger(__name__)
+
+
 def _call(settings: Settings, payload: dict) -> dict:
     if not settings.google_apps_script_url or not settings.google_apps_script_token:
         raise SheetsError("Faltan GOOGLE_APPS_SCRIPT_URL o GOOGLE_APPS_SCRIPT_TOKEN.")
@@ -20,13 +24,17 @@ def _call(settings: Settings, payload: dict) -> dict:
         headers={"Content-Type": "application/json"},
         method="POST",
     )
+    logger.info("sheets_request_started action=%s", payload.get("action"))
     try:
         with urlopen(request, timeout=30) as response:
             result = json.load(response)
     except (HTTPError, URLError, TimeoutError) as error:
+        logger.exception("sheets_request_failed action=%s", payload.get("action"))
         raise SheetsError(f"Google Sheets no respondió: {error}") from error
     if not result.get("ok"):
+        logger.error("sheets_request_rejected action=%s error=%s", payload.get("action"), result.get("error"))
         raise SheetsError(result.get("error", "Google Sheets devolvió un error."))
+    logger.info("sheets_request_completed action=%s", payload.get("action"))
     return result
 
 
