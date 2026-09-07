@@ -1,6 +1,7 @@
 import smtplib
 from email.message import EmailMessage
 from email.utils import parseaddr
+from html import escape
 
 from .config import Settings
 from .schemas import JobOffer
@@ -32,20 +33,73 @@ def _summary(results: dict[str, list[JobOffer]], keys: tuple[str, ...]) -> str:
         "javier_software": "Javier - Software Remoto",
         "mayra_petroleras": "Mayra - Oportunidades Petroleras",
     }
-    lines: list[str] = []
+    lines: list[str] = ["RESULTADOS DE BÚSQUEDA DE EMPLEO", "=" * 32, ""]
+    number = 0
     for key in keys:
         offers = results.get(key, [])
-        lines.extend([f"{labels[key]}: {len(offers)} oportunidades", ""])
+        lines.extend([labels[key].upper(), "-" * len(labels[key]), ""])
         for offer in offers:
+            number += 1
             lines.extend(
                 [
-                    f"{offer.score}/100 - {offer.cargo} en {offer.empresa}",
-                    f"Contacto: {offer.email_contacto}",
-                    offer.url,
+                    f"{number}. {offer.cargo} | {offer.empresa}",
+                    f"   Score: {offer.score}/100",
+                    f"   Ubicación: {offer.ubicacion}",
+                    f"   Modalidad: {offer.modalidad}",
+                    f"   Salario: {offer.rango_salarial}",
+                    f"   Contacto: {offer.email_contacto}",
+                    f"   URL: {offer.url}",
+                    f"   Razón del match: {offer.justificacion}",
                     "",
                 ]
             )
     return "\n".join(lines)
+
+
+def _summary_html(results: dict[str, list[JobOffer]], keys: tuple[str, ...]) -> str:
+    labels = {
+        "javier_automatizacion": "Javier - Automatización e IoT",
+        "javier_software": "Javier - Software Remoto",
+        "mayra_petroleras": "Mayra - Oportunidades Petroleras",
+    }
+    sections: list[str] = []
+    for key in keys:
+        cards: list[str] = []
+        for offer in results.get(key, []):
+            cards.append(
+                """
+                <article style="border:1px solid #d9dee5;border-radius:8px;padding:16px;margin:12px 0">
+                  <h3 style="margin:0 0 8px;color:#17324d">{cargo} · {empresa}</h3>
+                  <p style="margin:4px 0"><strong>Score:</strong> {score}/100</p>
+                  <p style="margin:4px 0"><strong>Ubicación:</strong> {ubicacion}<br>
+                  <strong>Modalidad:</strong> {modalidad}<br>
+                  <strong>Salario:</strong> {salario}<br>
+                  <strong>Contacto:</strong> {contacto}</p>
+                  <p style="margin:10px 0"><strong>Razón del match:</strong><br>{justificacion}</p>
+                  <p style="margin:4px 0"><a href="{url}">Ver oportunidad</a></p>
+                </article>
+                """.format(
+                    cargo=escape(offer.cargo),
+                    empresa=escape(offer.empresa),
+                    score=offer.score,
+                    ubicacion=escape(offer.ubicacion),
+                    modalidad=escape(offer.modalidad),
+                    salario=escape(offer.rango_salarial),
+                    contacto=escape(offer.email_contacto),
+                    justificacion=escape(offer.justificacion),
+                    url=escape(offer.url, quote=True),
+                )
+            )
+        sections.append(
+            f"<h2 style=\"color:#0f5965;border-bottom:2px solid #0f5965;padding-bottom:6px\">"
+            f"{escape(labels[key])}</h2>{''.join(cards) or '<p>No se encontraron oportunidades.</p>'}"
+        )
+    return (
+        "<html><body style=\"font-family:Arial,sans-serif;line-height:1.45;color:#263238;max-width:760px\">"
+        "<h1>Resultados de búsqueda de empleo</h1>"
+        f"{''.join(sections)}"
+        "</body></html>"
+    )
 
 
 def notify_recipients(
@@ -67,6 +121,13 @@ def notify_recipients(
             results,
             ("javier_automatizacion", "javier_software", "mayra_petroleras"),
         )
+    )
+    message.add_alternative(
+        _summary_html(
+            results,
+            ("javier_automatizacion", "javier_software", "mayra_petroleras"),
+        ),
+        subtype="html",
     )
     _send_messages(settings, [message])
     return len(recipients)
