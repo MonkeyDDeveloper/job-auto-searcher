@@ -85,6 +85,12 @@ def _summary_html(
                     'padding:10px 14px;border-radius:6px;text-decoration:none;font-weight:bold">'
                     "Marcar como postulada</a></p>"
                 )
+            view_button = (
+                f'<a href="{escape(settings.google_sheet_url, quote=True)}" '
+                'style="display:inline-block;background:#263238;color:#fff;padding:10px 14px;'
+                'border-radius:6px;text-decoration:none;font-weight:bold;margin:0 8px 8px 0">'
+                "Ver todas las postulaciones</a>"
+            )
             cards.append(
                 """
                 <article style="border:1px solid #d9dee5;border-radius:8px;padding:16px;margin:12px 0">
@@ -99,7 +105,7 @@ def _summary_html(
                   <p style="margin:10px 0"><strong>Empresa:</strong> {empresa}</p>
                   <p style="margin:10px 0"><strong>Email sugerido (español e inglés):</strong></p>
                   <pre style="white-space:pre-wrap;background:#f5f7fa;border-radius:6px;padding:12px;font-family:Arial,sans-serif">{email_recomendado}</pre>
-                  {button}
+                  <div style="margin-top:12px">{button}{view_button}</div>
                   <p style="margin:4px 0"><a href="{url}">Ver oportunidad</a></p>
                 </article>
                 """.format(
@@ -114,6 +120,7 @@ def _summary_html(
                     justificacion=escape(offer.justificacion),
                     email_recomendado=escape(offer.email_recomendado),
                     button=button,
+                    view_button=view_button,
                     url=escape(offer.url, quote=True),
                 )
             )
@@ -121,15 +128,10 @@ def _summary_html(
             f"<h2 style=\"color:#0f5965;border-bottom:2px solid #0f5965;padding-bottom:6px\">"
             f"{escape(labels[key])}</h2>{''.join(cards) or '<p>No se encontraron oportunidades.</p>'}"
         )
-    all_applications = (
-        f'<p><a href="{escape(settings.google_sheet_url, quote=True)}" style="display:inline-block;'
-        'background:#263238;color:#fff;padding:10px 14px;border-radius:6px;text-decoration:none;'
-        'font-weight:bold">Ver todas las postulaciones</a></p>'
-    )
     return (
         "<html><body style=\"font-family:Arial,sans-serif;line-height:1.45;color:#263238;max-width:760px\">"
         "<h1>Resultados de búsqueda de empleo</h1>"
-        f"{all_applications}{''.join(sections)}"
+        f"{''.join(sections)}"
         "</body></html>"
     )
 

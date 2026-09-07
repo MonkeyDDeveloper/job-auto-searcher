@@ -82,7 +82,7 @@ curl -X POST http://localhost:8000/search \
 
 `shouldNotify` requiere `SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD` y `SMTP_FROM`. Gmail normalmente requiere una contraseña de aplicación en `SMTP_PASSWORD`, no la contraseña normal de la cuenta. Los destinatarios del resumen se leen de `EMAILS_TO_NOTIFY` separados por comas.
 
-Cuando Perplexity encuentra un `email_contacto` y redacta un `email_recomendado` para Javier, el servicio envía ese borrador directamente al contacto. El borrador debe incluir versiones completas en español e inglés y mencionar la empresa. Los borradores de Mayra se incluyen en el resumen completo, pero nunca se envían automáticamente a sus contactos. Tanto Javier como Mayra reciben las tres listas.
+Perplexity siempre redacta un `email_recomendado`, incluso cuando no existe un `email_contacto`. En ese caso busca primero contactos de RRHH en Google y LinkedIn; si no encuentra uno verificable, el borrador se dirige al equipo de selección de la empresa y se incluye solo en el resumen. El servicio envía directamente el borrador únicamente cuando existe una dirección verificable. El borrador incluye versiones completas en español e inglés y menciona la empresa.
 
 Si SMTP no está configurado, el endpoint devuelve los resultados y añade el problema a `warnings`.
 
