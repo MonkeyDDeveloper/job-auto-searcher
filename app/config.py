@@ -5,11 +5,11 @@ import os
 @dataclass(frozen=True)
 class Settings:
     searcher_apikey: str
-    opencode_api_key: str
+    perplexity_api_key: str
     default_model: str
     fallback_model: str
-    opencode_timeout_seconds: int
-    opencode_retries: int
+    perplexity_timeout_seconds: int
+    perplexity_retries: int
     email_recipients: tuple[str, ...]
     mayra_email: str
     smtp_host: str | None
@@ -29,13 +29,15 @@ def load_settings() -> Settings:
     )
     return Settings(
         searcher_apikey=os.getenv("SEARCHER_APIKEY", ""),
-        opencode_api_key=os.getenv("OPENCODE_API_KEY", ""),
-        default_model=os.getenv("OPENCODE_DEFAULT_MODEL", "deepseek-v4-pro"),
+        perplexity_api_key=os.getenv("PERPLEXITY_API_KEY", ""),
+        default_model=os.getenv("PERPLEXITY_MODEL", "openai/gpt-5.6-luna"),
         fallback_model=os.getenv(
-            "OPENCODE_FALLBACK_MODEL", "deepseek-v4-flash-free"
+            "PERPLEXITY_FALLBACK_MODEL", "perplexity/sonar"
         ),
-        opencode_timeout_seconds=int(os.getenv("OPENCODE_TIMEOUT_SECONDS", "300")),
-        opencode_retries=int(os.getenv("OPENCODE_RETRIES", "2")),
+        perplexity_timeout_seconds=int(
+            os.getenv("PERPLEXITY_TIMEOUT_SECONDS", "300")
+        ),
+        perplexity_retries=int(os.getenv("PERPLEXITY_RETRIES", "2")),
         email_recipients=recipients,
         mayra_email=os.getenv("MAYRA_EMAIL", "masachemayra@gmail.com"),
         smtp_host=os.getenv("SMTP_HOST"),

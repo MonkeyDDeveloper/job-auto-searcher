@@ -1,39 +1,27 @@
-# Modelos OpenCode Zen
+# Modelos Perplexity Agent API
 
-Los modelos se ordenan aquí por capacidad general esperada para este caso, no por precio. El modelo por defecto del servicio es `deepseek-v4-pro`: evita los modelos más caros y también los modelos Flash/Nano orientados a velocidad o coste mínimo.
+El servicio usa modelos del Agent API con las herramientas `web_search` y `fetch_url`. Los precios son USD por 1 millón de tokens; las herramientas se cobran aparte y pueden cambiar.
 
-Los precios son USD por 1 millón de tokens, según la documentación de Zen consultada el 6 de septiembre de 2026. Pueden cambiar.
+| Nivel | Modelo | Entrada | Salida |
+|---|---|---:|---:|
+| 1 | `openai/gpt-5.6-sol` | $5.00 | $30.00 |
+| 2 | `anthropic/claude-sonnet-4-6` | $3.00 | $15.00 |
+| 3 | `openai/gpt-5.6-luna` | $0.20 | $1.20 |
+| 3 | `perplexity/sonar` | $0.25 | $2.50 |
+| 4 | `google/gemini-3.1-flash-lite` | $0.25 | $1.50 |
+| 4 | `perplexity/deepseek-v4-flash-0731` | $0.13 | $0.26 |
 
-| Nivel | Modelo | Entrada | Salida | Endpoint |
-|---|---|---:|---:|---|
-| 1 | `claude-opus-5` | $5.00 | $25.00 | `/zen/v1/messages` |
-| 1 | `gpt-5.5-pro` | $30.00 | $180.00 | `/zen/v1/responses` |
-| 1 | `gpt-6-astra` | $10.00 | $50.00 | `/zen/v1/responses` |
-| 2 | `claude-sonnet-4-6` | $3.00 | $15.00 | `/zen/v1/messages` |
-| 2 | `gpt-5.6-sol` | $2.00 | $10.00 | `/zen/v1/responses` |
-| 2 | `gpt-5.6-luna` | $0.20 | $1.20 | `/zen/v1/responses` |
-| 2 | `gemini-3.1-pro` | $2.00 | $12.00 | `/zen/v1/models/gemini-3.1-pro` |
-| 3 | `deepseek-v4-pro` | $1.74 | $3.48 | `/zen/v1/chat/completions` |
-| 3 | `qwen3.6-plus` | $0.50 | $3.00 | `/zen/v1/chat/completions` |
-| 3 | `glm-5.2` | $1.40 | $4.40 | `/zen/v1/chat/completions` |
-| 3 | `kimi-k2.6` | $0.95 | $4.00 | `/zen/v1/chat/completions` |
-| 4 | `deepseek-v4-flash` | $0.14 | $0.28 | `/zen/v1/chat/completions` |
-| 4 | `gemini-3.8-flash` | $1.50 | $7.50 | `/zen/v1/models/gemini-3.8-flash` |
-| 4 | `gpt-5.4-nano` | $0.20 | $1.25 | `/zen/v1/responses` |
-| 5 | `deepseek-v4-flash-free` | Gratis | Gratis | `/zen/v1/chat/completions` |
-| 5 | `big-pickle` | Gratis | Gratis | `/zen/v1/chat/completions` |
+Costos de herramientas:
 
-## Catálogo actual
+| Herramienta | Precio por llamada |
+|---|---:|
+| `web_search` | $0.0025 |
+| `fetch_url` | $0.0005 |
 
-El catálogo completo se puede consultar en tiempo real:
+El servicio usa por defecto `openai/gpt-5.6-luna` y como respaldo `perplexity/sonar`.
 
-```bash
-curl https://opencode.ai/zen/v1/models
-```
+Fuentes oficiales:
 
-Incluye también variantes de Claude, GPT, Gemini, Grok, Muse, GLM, MiniMax, Kimi, Qwen y modelos gratuitos. Los modelos `responses` y `messages` no usan exactamente el mismo formato que `chat/completions`; este proyecto fija `deepseek-v4-pro` porque usa el endpoint compatible implementado.
-
-## Fuentes
-
-- [OpenCode Zen](https://opencode.ai/docs/zen/)
-- [Modelos disponibles](https://opencode.ai/zen/v1/models)
+- [Agent API](https://docs.perplexity.ai/docs/agent-api/quickstart)
+- [Modelos y precios](https://docs.perplexity.ai/docs/agent-api/models)
+- [Web Search](https://docs.perplexity.ai/docs/agent-api/tools/web-search)

@@ -2,7 +2,7 @@
 
 ## `POST /search`
 
-Busca oportunidades con OpenCode Zen, las separa por candidato y opcionalmente envía notificaciones.
+Busca oportunidades con Perplexity Agent API, las separa por candidato y opcionalmente envía notificaciones.
 
 ### Autenticación
 
@@ -46,5 +46,5 @@ Las ofertas válidas deben tener `score` superior a 70. Cada lista puede contene
 
 ### Errores
 
-- `502`: OpenCode no respondió con el modelo principal ni con el modelo gratuito de respaldo, agotó los reintentos, la clave falta o ambas respuestas no son JSON válidas. El servicio intenta enviar una alerta por email antes de responder.
+- `502`: Perplexity no respondió con el modelo principal ni con el modelo de respaldo, agotó los reintentos, la clave falta o ambas respuestas no son JSON válidas. El servicio intenta enviar una alerta por email antes de responder.
 - `200` con `warnings`: la búsqueda funcionó, pero SMTP no estaba configurado o falló.

@@ -1,11 +1,11 @@
 # Employ Auto Search
 
-Servicio HTTP que envía un prompt a OpenCode Zen, normaliza las oportunidades encontradas y envía notificaciones por correo tanto al resumen como a los contactos directos extraídos.
+Servicio HTTP que envía un prompt a Perplexity Agent API, busca oportunidades en la web, normaliza los resultados y envía notificaciones por correo.
 
 ## Requisitos
 
 - Python 3.11 o superior.
-- Una API key de OpenCode Zen.
+- Una API key de Perplexity API.
 - Un servidor SMTP y una contraseña de aplicación.
 
 ## Instalación
@@ -57,15 +57,15 @@ Body opcional:
 Todos los campos son opcionales:
 
 - `prompt`: usa por defecto el prompt completo de búsqueda definido en `app/prompts.py`.
-- `model`: usa por defecto `OPENCODE_DEFAULT_MODEL`, que es `deepseek-v4-pro`.
-- `OPENCODE_FALLBACK_MODEL`: modelo alternativo si falla el principal; por defecto `deepseek-v4-flash-free`.
-- `OPENCODE_TIMEOUT_SECONDS`: tiempo máximo por intento contra OpenCode; por defecto `300` segundos.
-- `OPENCODE_RETRIES`: reintentos ante timeout, desconexión, HTTP 429 o HTTP 5xx; por defecto `2`.
+- `model`: usa por defecto `PERPLEXITY_MODEL`, que es `openai/gpt-5.6-luna`.
+- `PERPLEXITY_FALLBACK_MODEL`: modelo alternativo si falla el principal; por defecto `perplexity/sonar`.
+- `PERPLEXITY_TIMEOUT_SECONDS`: tiempo máximo por intento; por defecto `300` segundos.
+- `PERPLEXITY_RETRIES`: reintentos del SDK ante errores transitorios; por defecto `2`.
 - `shouldNotify`: `true` por defecto. Envía las tres listas completas a todos los destinatarios de `EMAILS_TO_NOTIFY` y a `MAYRA_EMAIL`, además de los correos directos de Javier.
 
-La respuesta se normaliza en tres listas: `javier_automatizacion`, `javier_software` y `mayra_petroleras`. Cada lista puede contener la cantidad de resultados que OpenCode logre validar, incluso cero; no se exige llegar a cinco.
+La respuesta se normaliza en tres listas: `javier_automatizacion`, `javier_software` y `mayra_petroleras`. Cada lista puede contener la cantidad de resultados que Perplexity logre validar, incluso cero; no se exige llegar a cinco.
 
-Si el modelo principal falla después de sus reintentos, el servicio intenta automáticamente el modelo gratuito configurado en `OPENCODE_FALLBACK_MODEL`. Solo genera una alerta de error si también falla el modelo de respaldo.
+Si el modelo principal falla después de sus reintentos, el servicio intenta automáticamente el modelo configurado en `PERPLEXITY_FALLBACK_MODEL`. Solo genera una alerta de error si también falla el modelo de respaldo.
 
 Ejemplo:
 
@@ -80,15 +80,15 @@ curl -X POST http://localhost:8000/search \
 
 `shouldNotify` requiere `SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD` y `SMTP_FROM`. Gmail normalmente requiere una contraseña de aplicación en `SMTP_PASSWORD`, no la contraseña normal de la cuenta. Los destinatarios del resumen se leen de `EMAILS_TO_NOTIFY` separados por comas.
 
-Cuando OpenCode encuentra un `Email de Contacto` y redacta un `Email Recomendado` para Javier, el servicio envía ese borrador directamente al contacto. Los borradores de Mayra se incluyen en el resumen completo, pero nunca se envían automáticamente a sus contactos. Tanto Javier como Mayra reciben las tres listas.
+Cuando Perplexity encuentra un `email_contacto` y redacta un `email_recomendado` para Javier, el servicio envía ese borrador directamente al contacto. Los borradores de Mayra se incluyen en el resumen completo, pero nunca se envían automáticamente a sus contactos. Tanto Javier como Mayra reciben las tres listas.
 
 Si SMTP no está configurado, el endpoint devuelve los resultados y añade el problema a `warnings`.
 
-Si OpenCode o una integración de email falla, el servicio intenta enviar una alerta con el detalle del error a `EMAILS_TO_NOTIFY` y `MAYRA_EMAIL`. Si el propio SMTP está caído, la alerta no podrá enviarse y el error queda en los logs/respuesta cuando sea posible.
+Si Perplexity o una integración de email falla, el servicio intenta enviar una alerta con el detalle del error a `EMAILS_TO_NOTIFY` y `MAYRA_EMAIL`. Si el propio SMTP está caído, la alerta no podrá enviarse y el error queda en los logs/respuesta cuando sea posible.
 
 ## Nota sobre búsqueda web
 
-El endpoint envía el prompt a Zen. La capacidad de encontrar ofertas reales depende de que el modelo/proveedor tenga acceso web. El prompt exige no inventar URLs ni ofertas; para una garantía de búsqueda verificable conviene añadir un proveedor de búsqueda web antes de producción.
+El endpoint usa Perplexity Agent API con las herramientas `web_search` y `fetch_url`, por lo que la IA puede buscar y verificar páginas antes de generar el JSON. La respuesta sigue validándose para evitar inventar o guardar datos con estructura incorrecta.
 
 ## Modelos y precios
 
@@ -113,4 +113,4 @@ Los precios son USD por 1 millón de tokens y pueden cambiar.
 | 5 | `deepseek-v4-flash-free` | Gratis | Gratis |
 | 5 | `big-pickle` | Gratis | Gratis |
 
-El servicio usa por defecto `deepseek-v4-pro`. Consulta el [catálogo actualizado de OpenCode Zen](https://opencode.ai/docs/zen/) y [`docs/MODELS.md`](docs/MODELS.md) antes de cambiar de modelo.
+El servicio usa por defecto `openai/gpt-5.6-luna`. Consulta el [catálogo actualizado de modelos de Perplexity Agent API](https://docs.perplexity.ai/docs/agent-api/models) y [`docs/MODELS.md`](docs/MODELS.md) antes de cambiar de modelo.

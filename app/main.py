@@ -6,7 +6,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from .config import load_settings
 from .notify import NotificationError, notify_contacts, notify_error, notify_recipients
 from .schemas import SearchRequest
-from .zen import OpenCodeError, search_jobs
+from .perplexity import PerplexityError, search_jobs
 
 
 app = FastAPI(
@@ -61,19 +61,19 @@ def search(
 
     results = None
     model = requested_model
-    last_error: OpenCodeError | None = None
+    last_error: PerplexityError | None = None
     for candidate_model in models_to_try:
         try:
             results = search_jobs(
                 request.prompt,
                 candidate_model,
-                settings.opencode_api_key,
-                timeout_seconds=settings.opencode_timeout_seconds,
-                retries=settings.opencode_retries,
+                settings.perplexity_api_key,
+                timeout_seconds=settings.perplexity_timeout_seconds,
+                retries=settings.perplexity_retries,
             )
             model = candidate_model
             break
-        except OpenCodeError as error:
+        except PerplexityError as error:
             last_error = error
 
     if results is None:

@@ -9,6 +9,14 @@ class SearchRequest(BaseModel):
     shouldNotify: bool = True
 
 
+class SearchResults(BaseModel):
+    model_config = {"extra": "forbid"}
+
+    javier_automatizacion: list["JobOffer"]
+    javier_software: list["JobOffer"]
+    mayra_petroleras: list["JobOffer"]
+
+
 class JobOffer(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
