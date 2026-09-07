@@ -50,6 +50,8 @@ def _summary(results: dict[str, list[JobOffer]], keys: tuple[str, ...]) -> str:
                     f"   Contacto: {offer.email_contacto}",
                     f"   URL: {offer.url}",
                     f"   Razón del match: {offer.justificacion}",
+                    "   Email sugerido:",
+                    f"   {offer.email_recomendado}",
                     "",
                 ]
             )
@@ -76,6 +78,8 @@ def _summary_html(results: dict[str, list[JobOffer]], keys: tuple[str, ...]) -> 
                   <strong>Salario:</strong> {salario}<br>
                   <strong>Contacto:</strong> {contacto}</p>
                   <p style="margin:10px 0"><strong>Razón del match:</strong><br>{justificacion}</p>
+                  <p style="margin:10px 0"><strong>Email sugerido:</strong></p>
+                  <pre style="white-space:pre-wrap;background:#f5f7fa;border-radius:6px;padding:12px;font-family:Arial,sans-serif">{email_recomendado}</pre>
                   <p style="margin:4px 0"><a href="{url}">Ver oportunidad</a></p>
                 </article>
                 """.format(
@@ -87,6 +91,7 @@ def _summary_html(results: dict[str, list[JobOffer]], keys: tuple[str, ...]) -> 
                     salario=escape(offer.rango_salarial),
                     contacto=escape(offer.email_contacto),
                     justificacion=escape(offer.justificacion),
+                    email_recomendado=escape(offer.email_recomendado),
                     url=escape(offer.url, quote=True),
                 )
             )
