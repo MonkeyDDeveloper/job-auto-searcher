@@ -38,11 +38,14 @@ La clave válida se configura en la variable de entorno `SEARCHER_APIKEY`.
   },
   "notifiedRecipients": 0,
   "contactEmailsSent": 0,
+  "registeredCount": 0,
   "warnings": []
 }
 ```
 
 Las ofertas válidas deben tener `score` superior a 70. Cada lista puede contener cero o más objetos. Cuando existe `email_contacto` y `email_recomendado` no es `No aplica`, el servicio envía ese borrador al contacto solo si pertenece a Javier.
+
+Antes de llamar a Perplexity, el servicio consulta Google Sheets y elimina oportunidades cuyo `id` o `uri` ya estén registrados. Las nuevas se registran con `postulada = no`. El endpoint `GET /applications/mark-applied?token=...` actualiza la fila a `postulada = si` y devuelve una página HTML de confirmación.
 
 ### Errores
 

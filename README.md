@@ -86,6 +86,14 @@ Si SMTP no está configurado, el endpoint devuelve los resultados y añade el pr
 
 Si Perplexity o una integración de email falla, el servicio intenta enviar una alerta con el detalle del error a `EMAILS_TO_NOTIFY` y `MAYRA_EMAIL`. Si el propio SMTP está caído, la alerta no podrá enviarse y el error queda en los logs/respuesta cuando sea posible.
 
+## Control de postulaciones
+
+El servicio consulta la hoja de Google Sheets antes de cada búsqueda. Si una oportunidad ya existe por `id` o `uri`, no vuelve a aparecer. Cada oportunidad nueva se registra con `postulada = no`.
+
+El archivo [`docs/google-apps-script.js`](docs/google-apps-script.js) contiene el puente de Apps Script. Copia su contenido en **Extensions → Apps Script**, configura `SPREADSHEET_ID`, `SHEET_NAME` y `SECRET`, y despliega como **Web app** ejecutando como tú. Configura la URL y el mismo token en `GOOGLE_APPS_SCRIPT_URL` y `GOOGLE_APPS_SCRIPT_TOKEN`.
+
+Los resúmenes incluyen un botón **Marcar como postulada** para cada oportunidad y un botón **Ver todas las postulaciones**. El primero actualiza la fila a `postulada = si` y muestra una página HTML de confirmación.
+
 ## Nota sobre búsqueda web
 
 El endpoint usa Perplexity Agent API con las herramientas `web_search` y `fetch_url`, por lo que la IA puede buscar y verificar páginas antes de generar el JSON. La respuesta sigue validándose para evitar inventar o guardar datos con estructura incorrecta.

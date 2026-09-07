@@ -1,12 +1,16 @@
 import secrets
 
-from fastapi import Depends, FastAPI, HTTPException, Security
+from fastapi import Depends, FastAPI, HTTPException, Query, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.responses import HTMLResponse
+from html import escape
 
 from .config import load_settings
 from .notify import NotificationError, notify_contacts, notify_error, notify_recipients
 from .schemas import SearchRequest
 from .perplexity import PerplexityError, search_jobs
+from .sheets import SheetsError, append_results, filter_new_results, list_rows, mark_applied
+from .tracking import read_application_token
 
 
 app = FastAPI(
@@ -54,6 +58,13 @@ def search(
     _: None = Depends(require_api_key),
 ) -> dict:
     settings = load_settings()
+    try:
+        existing_rows = list_rows(settings)
+    except SheetsError as error:
+        warnings: list[str] = []
+        _alert_error(settings, error, warnings)
+        raise HTTPException(status_code=503, detail=str(error)) from error
+
     requested_model = request.model or settings.default_model
     models_to_try = [requested_model]
     if settings.fallback_model != requested_model:
@@ -80,6 +91,14 @@ def search(
         alert_warnings: list[str] = []
         _alert_error(settings, last_error, alert_warnings)
         raise HTTPException(status_code=502, detail=str(last_error)) from last_error
+
+    results = filter_new_results(results, existing_rows)
+    try:
+        registered_count = append_results(settings, results)
+    except SheetsError as error:
+        warnings: list[str] = []
+        _alert_error(settings, error, warnings)
+        raise HTTPException(status_code=503, detail=str(error)) from error
 
     warnings: list[str] = []
     if model != requested_model:
@@ -108,7 +127,30 @@ def search(
             key: [offer.model_dump(by_alias=True) for offer in offers]
             for key, offers in results.items()
         },
+        "registeredCount": registered_count,
         "notifiedRecipients": notified_count,
         "contactEmailsSent": contact_emails_sent,
         "warnings": warnings,
     }
+
+
+@app.get("/applications/mark-applied", response_class=HTMLResponse)
+def mark_application_applied(token: str = Query(...)) -> HTMLResponse:
+    settings = load_settings()
+    application_id = read_application_token(token, settings.application_link_secret)
+    if not application_id:
+        return HTMLResponse(
+            "<h1>Enlace inválido o expirado</h1><p>No se pudo actualizar la postulación.</p>",
+            status_code=400,
+        )
+    try:
+        message = mark_applied(settings, application_id)
+    except SheetsError as error:
+        return HTMLResponse(
+            f"<h1>Error al actualizar</h1><p>{escape(str(error))}</p>",
+            status_code=502,
+        )
+    return HTMLResponse(
+        f"<h1>Postulación actualizada</h1><p>{escape(message)}</p>"
+        f"<p>Código: <strong>{escape(application_id)}</strong></p>"
+    )

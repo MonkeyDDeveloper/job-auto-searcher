@@ -17,6 +17,11 @@ class Settings:
     smtp_user: str | None
     smtp_password: str | None
     smtp_from: str | None
+    google_apps_script_url: str | None
+    google_apps_script_token: str | None
+    google_sheet_url: str
+    application_link_secret: str
+    public_base_url: str
 
 
 def load_settings() -> Settings:
@@ -45,4 +50,12 @@ def load_settings() -> Settings:
         smtp_user=os.getenv("SMTP_USER"),
         smtp_password=os.getenv("SMTP_PASSWORD"),
         smtp_from=os.getenv("SMTP_FROM"),
+        google_apps_script_url=os.getenv("GOOGLE_APPS_SCRIPT_URL"),
+        google_apps_script_token=os.getenv("GOOGLE_APPS_SCRIPT_TOKEN"),
+        google_sheet_url=os.getenv(
+            "GOOGLE_SHEET_URL",
+            "https://docs.google.com/spreadsheets/d/1I_QuiLT5TQLBcDA3Cc7Ttw7fia9huQ5AL2XrcFQowI0/edit",
+        ),
+        application_link_secret=os.getenv("APPLICATION_LINK_SECRET", ""),
+        public_base_url=os.getenv("PUBLIC_BASE_URL", "").rstrip("/"),
     )

@@ -1,22 +1,15 @@
 import smtplib
-from hashlib import sha256
 from email.message import EmailMessage
 from email.utils import parseaddr
 from html import escape
 
 from .config import Settings
 from .schemas import JobOffer
+from .tracking import make_application_token, offer_code
 
 
 class NotificationError(RuntimeError):
     pass
-
-
-def _offer_code(key: str, offer: JobOffer) -> str:
-    fingerprint = "|".join(
-        [key, offer.cargo, offer.empresa, offer.url, offer.email_contacto]
-    )
-    return f"JOB-{sha256(fingerprint.encode('utf-8')).hexdigest()[:10].upper()}"
 
 
 def _validate_smtp(settings: Settings) -> None:
@@ -48,7 +41,7 @@ def _summary(results: dict[str, list[JobOffer]], keys: tuple[str, ...]) -> str:
         lines.extend([labels[key].upper(), "-" * len(labels[key]), ""])
         for offer in offers:
             number += 1
-            code = _offer_code(key, offer)
+            code = offer_code(key, offer)
             lines.extend(
                 [
                     f"{number}. [{code}] {offer.cargo} | {offer.empresa}",
@@ -68,7 +61,11 @@ def _summary(results: dict[str, list[JobOffer]], keys: tuple[str, ...]) -> str:
     return "\n".join(lines)
 
 
-def _summary_html(results: dict[str, list[JobOffer]], keys: tuple[str, ...]) -> str:
+def _summary_html(
+    settings: Settings,
+    results: dict[str, list[JobOffer]],
+    keys: tuple[str, ...],
+) -> str:
     labels = {
         "javier_automatizacion": "Javier - Automatización e IoT",
         "javier_software": "Javier - Software Remoto",
@@ -78,7 +75,16 @@ def _summary_html(results: dict[str, list[JobOffer]], keys: tuple[str, ...]) -> 
     for key in keys:
         cards: list[str] = []
         for offer in results.get(key, []):
-            code = _offer_code(key, offer)
+            code = offer_code(key, offer)
+            button = ""
+            if settings.public_base_url and settings.application_link_secret:
+                token = make_application_token(code, settings.application_link_secret)
+                button = (
+                    f'<p><a href="{escape(settings.public_base_url)}/applications/mark-applied?token='
+                    f'{escape(token, quote=True)}" style="display:inline-block;background:#0f5965;color:#fff;'
+                    'padding:10px 14px;border-radius:6px;text-decoration:none;font-weight:bold">'
+                    "Marcar como postulada</a></p>"
+                )
             cards.append(
                 """
                 <article style="border:1px solid #d9dee5;border-radius:8px;padding:16px;margin:12px 0">
@@ -93,6 +99,7 @@ def _summary_html(results: dict[str, list[JobOffer]], keys: tuple[str, ...]) -> 
                   <p style="margin:10px 0"><strong>Empresa:</strong> {empresa}</p>
                   <p style="margin:10px 0"><strong>Email sugerido (español e inglés):</strong></p>
                   <pre style="white-space:pre-wrap;background:#f5f7fa;border-radius:6px;padding:12px;font-family:Arial,sans-serif">{email_recomendado}</pre>
+                  {button}
                   <p style="margin:4px 0"><a href="{url}">Ver oportunidad</a></p>
                 </article>
                 """.format(
@@ -106,6 +113,7 @@ def _summary_html(results: dict[str, list[JobOffer]], keys: tuple[str, ...]) -> 
                     contacto=escape(offer.email_contacto),
                     justificacion=escape(offer.justificacion),
                     email_recomendado=escape(offer.email_recomendado),
+                    button=button,
                     url=escape(offer.url, quote=True),
                 )
             )
@@ -113,10 +121,15 @@ def _summary_html(results: dict[str, list[JobOffer]], keys: tuple[str, ...]) -> 
             f"<h2 style=\"color:#0f5965;border-bottom:2px solid #0f5965;padding-bottom:6px\">"
             f"{escape(labels[key])}</h2>{''.join(cards) or '<p>No se encontraron oportunidades.</p>'}"
         )
+    all_applications = (
+        f'<p><a href="{escape(settings.google_sheet_url, quote=True)}" style="display:inline-block;'
+        'background:#263238;color:#fff;padding:10px 14px;border-radius:6px;text-decoration:none;'
+        'font-weight:bold">Ver todas las postulaciones</a></p>'
+    )
     return (
         "<html><body style=\"font-family:Arial,sans-serif;line-height:1.45;color:#263238;max-width:760px\">"
         "<h1>Resultados de búsqueda de empleo</h1>"
-        f"{''.join(sections)}"
+        f"{all_applications}{''.join(sections)}"
         "</body></html>"
     )
 
@@ -143,6 +156,7 @@ def notify_recipients(
     )
     message.add_alternative(
         _summary_html(
+            settings,
             results,
             ("javier_automatizacion", "javier_software", "mayra_petroleras"),
         ),
@@ -181,7 +195,7 @@ def notify_contacts(
             address = parseaddr(offer.email_contacto)[1]
             if not address or offer.email_recomendado.strip().lower() == "no aplica":
                 continue
-            code = _offer_code(key, offer)
+            code = offer_code(key, offer)
             message = EmailMessage()
             message["Subject"] = (
                 f"[{code}] {offer.empresa} - Presentación profesional - {offer.cargo}"
