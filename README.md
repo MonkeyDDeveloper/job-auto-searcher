@@ -90,7 +90,7 @@ Si Perplexity o una integración de email falla, el servicio intenta enviar una 
 
 El servicio consulta la hoja de Google Sheets antes de cada búsqueda. Si una oportunidad ya existe por `id` o `uri`, no vuelve a aparecer. Cada oportunidad nueva se registra con `postulada = no`.
 
-El archivo [`docs/google-apps-script.js`](docs/google-apps-script.js) contiene el puente de Apps Script. Copia su contenido en **Extensions → Apps Script**, configura `SPREADSHEET_ID`, `SHEET_NAME` y `SECRET`, y despliega como **Web app** ejecutando como tú. Configura la URL y el mismo token en `GOOGLE_APPS_SCRIPT_URL` y `GOOGLE_APPS_SCRIPT_TOKEN`.
+El archivo [`docs/google-apps-script.js`](docs/google-apps-script.js) contiene el puente de Apps Script. Copia su contenido en **Extensions → Apps Script**, configura `SPREADSHEET_ID`, `SHEET_NAME` y `SECRET`, y despliega como **Web app** ejecutando como tú. Configura la URL y el mismo token en `GOOGLE_APPS_SCRIPT_URL` y `GOOGLE_APPS_SCRIPT_TOKEN`. Si la hoja está vacía, el script crea automáticamente los encabezados y luego añade la primera tanda de oportunidades; si faltan columnas, también las agrega.
 
 Los resúmenes incluyen un botón **Marcar como postulada** para cada oportunidad y un botón **Ver todas las postulaciones**. El primero actualiza la fila a `postulada = si` y muestra una página HTML de confirmación.
 

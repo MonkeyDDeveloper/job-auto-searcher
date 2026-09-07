@@ -32,7 +32,13 @@ function ensureHeaders(sheet) {
     return HEADERS;
   }
   const current = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-  return current.length ? current : HEADERS;
+  const headers = current.length ? current : [];
+  const missing = HEADERS.filter(header => headers.indexOf(header) < 0);
+  if (missing.length) {
+    sheet.getRange(1, headers.length + 1, 1, missing.length).setValues([missing]);
+    return headers.concat(missing);
+  }
+  return headers;
 }
 
 function listRows() {
