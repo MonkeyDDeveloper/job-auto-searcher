@@ -66,4 +66,8 @@ def search_jobs(
         parsed = SearchResults.model_validate_json(response.output_text)
     except (ValueError, TypeError) as error:
         raise PerplexityError("Perplexity no devolvió el JSON esperado.") from error
-    return parsed.model_dump()
+    return {
+        "javier_automatizacion": parsed.javier_automatizacion,
+        "javier_software": parsed.javier_software,
+        "mayra_petroleras": parsed.mayra_petroleras,
+    }
