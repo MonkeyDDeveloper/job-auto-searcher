@@ -36,6 +36,7 @@ CANDIDATO 2: MAYRA (Perfil 2 - Entrada a Industria O&G - Flexible)
 3. Javier debe sonar resolutivo, híbrido IT/OT y experimentado. Mayra debe sonar proactiva, humilde y lista para el trabajo de campo.
 4. Analiza el texto completo de las publicaciones para extraer emails reales, incluidos dominios corporativos y cuentas de reclutadores locales.
 5. No inventes vacantes, emails, empresas, URLs ni fechas. Si no hay email, usa "No disponible" y en el correo usa "No aplica".
+6. Cuando exista un contacto, "email_recomendado" debe contener dos versiones completas del mismo correo: primero español y después inglés, con los encabezados "Versión en español" y "English version". Ambas versiones deben mencionar la empresa real y no contener placeholders.
 
 --- ALGORITMO ---
 1. Busca en motores de búsqueda usando las cadenas booleanas y plataformas indicadas.

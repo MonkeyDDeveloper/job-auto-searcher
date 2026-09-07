@@ -59,7 +59,8 @@ def _summary(results: dict[str, list[JobOffer]], keys: tuple[str, ...]) -> str:
                     f"   Contacto: {offer.email_contacto}",
                     f"   URL: {offer.url}",
                     f"   Razón del match: {offer.justificacion}",
-                    "   Email sugerido:",
+                    f"   Empresa: {offer.empresa}",
+                    "   Email sugerido (español e inglés):",
                     f"   {offer.email_recomendado}",
                     "",
                 ]
@@ -89,7 +90,8 @@ def _summary_html(results: dict[str, list[JobOffer]], keys: tuple[str, ...]) -> 
                   <strong>Salario:</strong> {salario}<br>
                   <strong>Contacto:</strong> {contacto}</p>
                   <p style="margin:10px 0"><strong>Razón del match:</strong><br>{justificacion}</p>
-                  <p style="margin:10px 0"><strong>Email sugerido:</strong></p>
+                  <p style="margin:10px 0"><strong>Empresa:</strong> {empresa}</p>
+                  <p style="margin:10px 0"><strong>Email sugerido (español e inglés):</strong></p>
                   <pre style="white-space:pre-wrap;background:#f5f7fa;border-radius:6px;padding:12px;font-family:Arial,sans-serif">{email_recomendado}</pre>
                   <p style="margin:4px 0"><a href="{url}">Ver oportunidad</a></p>
                 </article>
@@ -181,11 +183,15 @@ def notify_contacts(
                 continue
             code = _offer_code(key, offer)
             message = EmailMessage()
-            message["Subject"] = f"[{code}] Presentación profesional - {offer.cargo}"
+            message["Subject"] = (
+                f"[{code}] {offer.empresa} - Presentación profesional - {offer.cargo}"
+            )
             message["From"] = settings.smtp_from or ""
             message["To"] = address
             message.set_content(
-                f"Código de seguimiento: {code}\n\n{offer.email_recomendado}"
+                f"Código de seguimiento: {code}\n"
+                f"Empresa: {offer.empresa}\n\n"
+                f"{offer.email_recomendado}"
             )
             messages.append(message)
 
