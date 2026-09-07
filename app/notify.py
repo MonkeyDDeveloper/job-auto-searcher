@@ -1,4 +1,5 @@
 import smtplib
+from hashlib import sha256
 from email.message import EmailMessage
 from email.utils import parseaddr
 from html import escape
@@ -9,6 +10,13 @@ from .schemas import JobOffer
 
 class NotificationError(RuntimeError):
     pass
+
+
+def _offer_code(key: str, offer: JobOffer) -> str:
+    fingerprint = "|".join(
+        [key, offer.cargo, offer.empresa, offer.url, offer.email_contacto]
+    )
+    return f"JOB-{sha256(fingerprint.encode('utf-8')).hexdigest()[:10].upper()}"
 
 
 def _validate_smtp(settings: Settings) -> None:
@@ -40,9 +48,10 @@ def _summary(results: dict[str, list[JobOffer]], keys: tuple[str, ...]) -> str:
         lines.extend([labels[key].upper(), "-" * len(labels[key]), ""])
         for offer in offers:
             number += 1
+            code = _offer_code(key, offer)
             lines.extend(
                 [
-                    f"{number}. {offer.cargo} | {offer.empresa}",
+                    f"{number}. [{code}] {offer.cargo} | {offer.empresa}",
                     f"   Score: {offer.score}/100",
                     f"   Ubicación: {offer.ubicacion}",
                     f"   Modalidad: {offer.modalidad}",
@@ -68,9 +77,11 @@ def _summary_html(results: dict[str, list[JobOffer]], keys: tuple[str, ...]) -> 
     for key in keys:
         cards: list[str] = []
         for offer in results.get(key, []):
+            code = _offer_code(key, offer)
             cards.append(
                 """
                 <article style="border:1px solid #d9dee5;border-radius:8px;padding:16px;margin:12px 0">
+                  <p style="margin:0 0 6px;color:#0f5965;font-weight:bold">Código: {code}</p>
                   <h3 style="margin:0 0 8px;color:#17324d">{cargo} · {empresa}</h3>
                   <p style="margin:4px 0"><strong>Score:</strong> {score}/100</p>
                   <p style="margin:4px 0"><strong>Ubicación:</strong> {ubicacion}<br>
@@ -85,6 +96,7 @@ def _summary_html(results: dict[str, list[JobOffer]], keys: tuple[str, ...]) -> 
                 """.format(
                     cargo=escape(offer.cargo),
                     empresa=escape(offer.empresa),
+                    code=escape(code),
                     score=offer.score,
                     ubicacion=escape(offer.ubicacion),
                     modalidad=escape(offer.modalidad),
@@ -167,11 +179,14 @@ def notify_contacts(
             address = parseaddr(offer.email_contacto)[1]
             if not address or offer.email_recomendado.strip().lower() == "no aplica":
                 continue
+            code = _offer_code(key, offer)
             message = EmailMessage()
-            message["Subject"] = f"Presentación profesional - {offer.cargo}"
+            message["Subject"] = f"[{code}] Presentación profesional - {offer.cargo}"
             message["From"] = settings.smtp_from or ""
             message["To"] = address
-            message.set_content(offer.email_recomendado)
+            message.set_content(
+                f"Código de seguimiento: {code}\n\n{offer.email_recomendado}"
+            )
             messages.append(message)
 
     if messages:
